@@ -1,2 +1,9 @@
 *pycache*
 *bot-env
+
+*chromedriver.exe
+*.csv
+
+*json
+*safetensors
+*.model
