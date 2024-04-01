@@ -1,20 +1,30 @@
 import requests
-import json
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
 
+# base url and links which contain MacBooks information
 BASEURL = "https://saratov.istudio-shop.ru"
 MAC_LIST = ["https://saratov.istudio-shop.ru/catalog/Macbook/",
             "https://saratov.istudio-shop.ru/catalog/Macbook/?curPos=20",
             "https://saratov.istudio-shop.ru/catalog/Macbook/?curPos=40"]
 
+# dictionary which will convert to dataset in csv
 DATASET = {}
 
-parts_to_remove = ["федеральная сеть",
+# unnecessary repeating part of the content of some website blocks
+PARTS_TO_REMOVE = ["федеральная сеть",
                    "Социальные сети"]
 
+
 def get_mac_info(macbook_link):
+    """
+        Args:
+            macbook_link (str): full link to MacBook
+
+        Returns:
+            mac_info (str): text about product parsed from MacBook link
+    """
     r = requests.get(macbook_link)
     soup = BeautifulSoup(r.content, 'html.parser')
     mac_info_tags = soup.find_all("p")
@@ -23,7 +33,7 @@ def get_mac_info(macbook_link):
         if tag.find() is None:
             mac_info += tag.text
 
-    for part in parts_to_remove:
+    for part in PARTS_TO_REMOVE:
         if part in mac_info:
             mac_info = mac_info.replace(part, "")
     
@@ -31,6 +41,19 @@ def get_mac_info(macbook_link):
 
 
 def go_through_page(baseurl):
+    """
+        Args:
+            baseurl (str): link to the site from which MacBooks info will be
+                           parsed
+        
+        Returns:
+            model_list (list): list with MacBook model names
+            link_list (list): list with links to MacBooks
+            price_list (list): list with prices of MacBooks
+            info_list (list): list with info about MacBooks
+
+            All of these lists are corresponding to each other.
+    """
     r = requests.get(baseurl)
     soup = BeautifulSoup(r.content, 'html.parser')
 
@@ -52,6 +75,13 @@ def go_through_page(baseurl):
 
 
 def main():
+    """
+        This script is parsing information about MacBooks from site
+        saratov.istudio-shop.ru
+
+        This information will be saved as csv file and will be use as training
+        data for LLM.
+    """
     model_list, link_list, price_list, info_list = [], [], [], []
     for url in MAC_LIST:
         page_model_list, page_link_list, page_price_list, page_info_list = go_through_page(url)

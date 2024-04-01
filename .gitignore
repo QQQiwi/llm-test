@@ -1,2 +1,5 @@
 *pycache*
-*bot-env
+*/bot-env
+
+*chromedriver.exe
+*.csv
