@@ -16,7 +16,7 @@ INPUT_QUESTION = [
     "Посоветуй мне мощный макбук."
 ]
 
-stats_df_path = "archive/laptop_data.csv"
+stats_df_path = "datasets/laptop_data.csv"
 dataset1_path = "datasets/stats_df.csv"
 dataset2_path = "datasets/i-lite.csv"
 dataset3_path = "datasets/istudio-shop.csv"
