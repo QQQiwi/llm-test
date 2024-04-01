@@ -1,5 +1,6 @@
 import pandas as pd
 
+# Questions needed to formulate a prompt for LLM
 INPUT_QUESTION = [
     "Расскажи мне про",
     "Напиши мне характеристики макбука",
@@ -16,24 +17,46 @@ INPUT_QUESTION = [
     "Посоветуй мне мощный макбук."
 ]
 
-stats_df_path = "datasets/laptop_data.csv"
-dataset1_path = "datasets/stats_df.csv"
-dataset2_path = "datasets/i-lite.csv"
-dataset3_path = "datasets/istudio-shop.csv"
-prompt_dataset_path = "prompts.csv"
+
+# TODO:
+# Hard-coded paths to datasets (i guess it should be fixed isn't it?)
+STATS_DF_PATH = "datasets/laptop_data.csv"
+DATASET1_PATH = "datasets/stats_df.csv"
+DATASET2_PATH = "datasets/i-lite.csv"
+DATASET3_PATH = "datasets/istudio-shop.csv"
+PROMPT_DATASET_PATH = "prompts.csv"
 
 
-# Препроцессинг датасета с Kaggle, который содержит только статистику о
-# некоторых ультрабуках
+def stats_to_string(df_row):
+    """
+        A function that converts a dataframe sample into a string with
+        information about the MacBook and into a string with the cost of the
+        MacBook
+
+        Args:
+            df_row (pd.Series): sample of dataframe containing information about
+                                one MacBook
+        
+        Returns:
+            (str): string with stats about current MacBook (str): string with
+            price of current MacBook    
+
+    """
+    return f"""{df_row["Company"]} {df_row["TypeName"]} {df_row["Inches"]}""", f"""Ноутбук {df_row["Company"]} {df_row["TypeName"]} обладает экраном {df_row["ScreenResolution"]}, процессором {df_row["Cpu"]}. Объём его оперативной памяти {df_row["Ram"]}, его жесткий диск - {df_row["Memory"]}. Также у него есть графический процессор {df_row["Gpu"]}. Он весит {df_row["Weight"]}.""", df_row["Price"]
+
+
 def stats_df_preprocessing():
-    stats_df = pd.read_csv(stats_df_path)
+    """
+        A function that preprocesses a dataset found on Kaggle, which contains
+        some information about apple ultrabooks. This dataset then saving to csv
+        format for next preprocessing step.
+    """
+
+    stats_df = pd.read_csv(STATS_DF_PATH)
     stats_df = stats_df[stats_df["Company"] == "Apple"]
 
-    def stats_to_string(df):
-        return f"""{df["Company"]} {df["TypeName"]} {df["Inches"]}""", f"""Ноутбук {df["Company"]} {df["TypeName"]} обладает экраном {df["ScreenResolution"]}, процессором {df["Cpu"]}. Объём его оперативной памяти {df["Ram"]}, его жесткий диск - {df["Memory"]}. Также у него есть графический процессор {df["Gpu"]}. Он весит {df["Weight"]}.""", df["Price"]
-
     model_list, info_list, price_list = [], [], []
-    for idx, row in stats_df.iterrows():
+    for _, row in stats_df.iterrows():
         model, info, price = stats_to_string(row)
         model_list.append(model)
         info_list.append(info)
@@ -43,10 +66,21 @@ def stats_df_preprocessing():
     stats_df["Info"] = info_list
     stats_df["Price"] = price_list
 
-    stats_df.to_csv(dataset1_path, index=False)
+    stats_df.to_csv(DATASET1_PATH, index=False)
 
 
 def generate_prompt(question, data_point):
+    """
+        Args:
+            question (str): an input question needed to formulate a prompt for
+                            LLM
+            data_point (pd.Series): sample of dataframe containing information
+                                    about one MacBook
+    
+        Returns:
+            (str) a prompt in a convenient format for training a large language
+            model.
+    """
     return f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
 ### Instruction:
 Answer question of client about advantages and disadvantages of macbook. Tell him about his goods and recommend him to buy it.
@@ -58,12 +92,18 @@ Answer question of client about advantages and disadvantages of macbook. Tell hi
 
 
 def create_prompt_dataset():
-    df1 = pd.read_csv(dataset1_path)
-    df2 = pd.read_csv(dataset2_path)
-    df3 = pd.read_csv(dataset3_path)
+    """
+        A function that creates a dataset for fine-tuning an LLM model. This
+        dataset then saving to csv format for LLM fine-tuning.
+    """
+    df1 = pd.read_csv(DATASET1_PATH)
+    df2 = pd.read_csv(DATASET2_PATH)
+    df3 = pd.read_csv(DATASET3_PATH)
     dfs = [df1, df2, df3]
 
     prompts = []
+    # TODO:
+    # this cycles can be changed to pandas functions (apply etc.)
     for cur_df in dfs:
         for _, row in cur_df.iterrows():
             for q in INPUT_QUESTION:
@@ -71,10 +111,15 @@ def create_prompt_dataset():
     
     df = {"prompt": prompts}
     df = pd.DataFrame(df)
-    df.to_csv(prompt_dataset_path)
+    df.to_csv(PROMPT_DATASET_PATH)
 
 
 def main():
+    """
+        This script firstly preprocesses Kaggle dataset which contains info
+        about some ultrabooks, then preprocess this data and parsed data to
+        create a dataset for LLM finetuning.
+    """
     stats_df_preprocessing()
     create_prompt_dataset()
 
