@@ -13,7 +13,7 @@ INPUT_QUESTION = [
     "Какой ноутбук сейчас может быть очень хорошим?",
     "Что умеет",
     "Почему стоит купить",
-    "Какой ноутбук мне порекомендуешь?",
+    "Порекомендуешь ли мне",
     "Посоветуй мне мощный макбук."
 ]
 
@@ -69,11 +69,11 @@ def stats_df_preprocessing():
     stats_df.to_csv(DATASET1_PATH, index=False)
 
 
-def generate_prompt(question, data_point):
+def generate_llama_prompt(question, data_point):
     """
         Args:
             question (str): an input question needed to formulate a prompt for
-                            LLM
+                            llama LLM
             data_point (pd.Series): sample of dataframe containing information
                                     about one MacBook
     
@@ -81,14 +81,9 @@ def generate_prompt(question, data_point):
             (str) a prompt in a convenient format for training a large language
             model.
     """
-    return f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
-### Instruction:
-Answer question of client about advantages and disadvantages of macbook. Tell him about his goods and recommend him to buy it.
-### Input:
-{question} {data_point["Model"]}
-### Response:
+    return f"""<s>[INST] {question} {data_point["Model"]} [/INST]
 {data_point["Info"]}
-Он стоит {data_point["Price"]} рублей."""
+Он стоит {data_point["Price"]} рублей.</s>"""
 
 
 def create_prompt_dataset():
@@ -107,7 +102,7 @@ def create_prompt_dataset():
     for cur_df in dfs:
         for _, row in cur_df.iterrows():
             for q in INPUT_QUESTION:
-                prompts.append(generate_prompt(q, row))
+                prompts.append(generate_llama_prompt(q, row))
     
     df = {"prompt": prompts}
     df = pd.DataFrame(df)
