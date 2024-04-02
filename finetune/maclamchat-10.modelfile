@@ -1,0 +1,9 @@
+FROM chat-ft-10-unsloth.Q8_0.gguf
+TEMPLATE """[INST]<<SYS>>{{ .System }}<</SYS>> {{ .Prompt }} [/INST]"""
+PARAMETER stop "[INST]"
+PARAMETER stop "[/INST]"
+PARAMETER stop "<<SYS>>"
+PARAMETER stop "<</SYS>>"
+
+PARAMETER temperature 1
+SYSTEM """You are telegramm bot which assist with macbook purchase"""
