@@ -234,7 +234,8 @@ async def ollama_request(message: types.Message):
     except Exception as e:
         await bot.send_message(
             chat_id=message.chat.id,
-            text=f"""Error occurred\n```\n{traceback.format_exc()}\n```""",
+            # text=f"""Error occurred\n```\n{traceback.format_exc()}\n```""",
+            text=f"""Возникла ошибка! Попробуйте ещё раз.""",
             parse_mode=ParseMode.MARKDOWN_V2,
         )
 
