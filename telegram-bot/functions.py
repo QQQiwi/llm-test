@@ -7,12 +7,27 @@ from asyncio import Lock
 from functools import wraps
 from dotenv import load_dotenv
 
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from pinecone import Pinecone
+from langchain.prompts import PromptTemplate
+from langchain_community.vectorstores import Pinecone as PineconeLangChain
+from langchain.schema.runnable import RunnablePassthrough
+
 load_dotenv()
 token = os.getenv("TOKEN")
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 ollama_port = os.getenv("OLLAMA_PORT")
-log_level_str = os.getenv("LOG_LEVEL", "INFO")
 
+is_rag = os.getenv('IS_RAG')
+pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+index_name = os.getenv('PINECONE_INDEX_NAME')
+embeddings = HuggingFaceEmbeddings()
+docsearch = PineconeLangChain.from_existing_index(index_name, embeddings)
+template = """{question}. Context: {context}"""
+prompt_template = PromptTemplate(template=template,
+                                 input_variables=["context", "question"])
+
+log_level_str = os.getenv("LOG_LEVEL", "INFO")
 # Настройки логгирования
 # ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET']
 log_levels = list(logging._levelToName.values())
