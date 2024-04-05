@@ -13,8 +13,8 @@ bot = Bot(token=token)
 dp = Dispatcher()
 builder = InlineKeyboardBuilder()
 builder.row(
-    types.InlineKeyboardButton(text="ℹ️ Информация", callback_data="info"),
-    types.InlineKeyboardButton(text="⚙️ Выбрать модель", callback_data="modelmanager"),
+    # types.InlineKeyboardButton(text="ℹ️ Информация", callback_data="info"),
+    # types.InlineKeyboardButton(text="⚙️ Выбрать модель", callback_data="modelmanager"),
 )
 
 commands = [
@@ -41,7 +41,7 @@ async def get_bot_info():
 # /start command
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    start_message = f"Привет, <b>{message.from_user.full_name}</b>!"
+    start_message = f"Привет, <b>{message.from_user.full_name}</b>!\nИспользуемая модель: <code>{modelname}</code>"
     await message.answer(
         start_message,
         parse_mode=ParseMode.HTML,
@@ -136,7 +136,6 @@ async def handle_message(message: types.Message):
         await ollama_request(message)
 
 
-...
 async def ollama_request(message: types.Message):
     try:
         await bot.send_chat_action(message.chat.id, "typing")
@@ -154,6 +153,13 @@ async def ollama_request(message: types.Message):
         last_sent_text = None
 
         async with ACTIVE_CHATS_LOCK:
+            if int(is_rag):
+                rag_chain = (
+                    {"context": docsearch.as_retriever(),  "question": RunnablePassthrough()} 
+                    | prompt_template
+                )
+                prompt = str(rag_chain.invoke(prompt))
+
             # Add prompt to active chats object
             if ACTIVE_CHATS.get(message.from_user.id) is None:
                 ACTIVE_CHATS[message.from_user.id] = {
@@ -241,6 +247,8 @@ async def ollama_request(message: types.Message):
 
 
 async def main():
+    
+
     await bot.set_my_commands(commands)
     await dp.start_polling(bot, skip_update=True)
 
